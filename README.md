@@ -6,7 +6,7 @@ Repositório para os modelos MLEMix, RegMLEMix e HierarchicalLocalClassifier des
 
 Verifique os requerimentos no arquivo environment.yml.
 
-## Installation
+## Instalação
 
 Primeiro, clone o repositório do github ``mlemix``. Em seguida, crie um ambiente virtual com conda ou mamba para instalar as dependências necessárias.
 
