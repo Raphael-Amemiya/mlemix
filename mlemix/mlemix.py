@@ -18,7 +18,7 @@
     
     Referência
     ----------    
-    Amemiya, R. (2021). Análise de ancestralidade genética da população 
+    Amemiya, R. (2024). Análise de ancestralidade genética da população 
     de São Paulo.
 """
 
@@ -41,9 +41,9 @@ class MLEMix(ClassifierMixin, BaseEstimator):
     
     Estimador específico para dados compostos por SNPs bialélicos. O 
     modelo utiliza Máxima Verossimilhança (MLE) e permite obter
-    frequência alélica de cada SNP para cada população. Também permite
-    obter as proporções de ancestralidade de duas ou mais populações
-    para cada amostra. 
+    frequência alélica de cada SNP para cada grupo populacional.
+    Também permite obter as proporções de ancestralidade de dois ou
+    mais grupos populacionais para cada amostra.
     
     Parameters
     ----------
@@ -66,14 +66,14 @@ class MLEMix(ClassifierMixin, BaseEstimator):
     Attributes
     ---------
     classes_ : ndarray de formato (n_classes,)
-        Nome das populações usadas no estimador.
+        Nome dos grupos populacionais usados no estimador.
         
     feature_count_ : ndarray de formato (n_classes, n_features)
-        Número de alelos encontrado em cada (população, SNP) durante o
-        treinamento.
+        Número de SNPs encontrado no treinamento.
         
     feature_freq_ : ndarray de formato (n_classes, n_features)
-        Frequência alélica de cada SNP para cada uma das populações.
+        Frequência alélica dos grupos populacionais para os alelos
+        fornecidos para cada SNP.
 
     n_features_in_ : int
         Número de SNPs usados no treinamentos.
@@ -103,19 +103,15 @@ class MLEMix(ClassifierMixin, BaseEstimator):
     
     Examples
     --------
-    >>> import numpy as np
-    >>> nprand = np.random.RandomState(1)
-    >>> X = nprand.randint(0, 3, size=(20, 100))
-    >>> X_new = nprand.randint(0, 3, size=(1, 100))
-    >>> y = nprand.randint(0, 3, size=20)
-    >>> from mlemix import MLEMix
+    >>> from mlemix.mlemix import MLEMix
+
     >>> model = MLEMix()
     >>> model.fit(X, y)
     MLEMix()
     >>> print(model.predict(X_new))
     [2]
     >>> print(model.predict_proba(X_new))
-    [59.89968404,  0.        , 40.10031596]
+    [[0.30, 0., 0.70 ]]
     """
     
     def __init__(
@@ -179,11 +175,10 @@ class MLEMix(ClassifierMixin, BaseEstimator):
         """Método para validar o primeiro partial_fit.
         
         Retorna 'True' se for o primeiro partial_fit, ao mesmo tempo
-        que salva no self informações sobre todas as
-        populações(classes), que serão apresentadas ao modelo durante o 
-        treinamento. As chamadas subsequentes do partial_fit checa se
-        'classes' continua consistente com o
-        primeiro partial_fit.
+        que salva no self informações sobre todas os grupos
+        populacionais, que serão apresentadas ao modelo durante o treinamento.
+        As chamadas subsequentes do partial_fit checa se 'classes'
+        continua consistente com o primeiro partial_fit.
         """
         
         if getattr(self, "classes_", None) is not None:
@@ -285,26 +280,28 @@ class MLEMix(ClassifierMixin, BaseEstimator):
     def partial_fit(self, X, y, rsid=None, allele2=None):
         """Fit incremental em um chunk de amostras.
         
-        Esse método é usado para treinar um dataset incrementalmente
-        chunk por chunk sem precisar carregar todo o dataset na
-        memória.
+        Esse método é usado para treinar um conjunto de dados
+        incrementalmente chunk por chunk sem precisar carregar
+        todo o dataset na memória.
 
         Parameters
         ----------
         X : ndarray de formato (n_samples, n_features)
             Em que n_samples é o número de amostras e n_features é o
-            número de SNPS.
+            número de SNPS. Contém o número de allele2 de cada SNP
+            observado nas amostras usadas para o treinamento.
             
         y : ndarray de formato (n_samples,)
-            Nome das populações(target) de cada amostra do chunk. Deve
-            ser fornecido na mesma ordem que as amostras aparecem no X.
+            Nome dos grupos populacionais(classes) de cada amostra do
+            chunk. Deve ser fornecido na mesma ordem que as amostras
+            aparecem no X.
 
         rsid : ndarray de formato (n_features,), opcional
             rsid de todos os SNPs usados no treinamento. Deve ser
             fornecido na mesma ordem que os SNPs estão no X.
 
         allele2 : ndarray de formato (n_features,), opcional
-            Alelos de todos os SNPs usados no treinamento. Deve ser
+            Alelo 2 de todos os SNPs usados no treinamento. Deve ser
             fornecido na mesma ordem que os SNPs estão no X.
             
         Returns
@@ -355,17 +352,17 @@ class MLEMix(ClassifierMixin, BaseEstimator):
 
 
     def fit(self, X, y, rsid=None, allele2=None):
-        """Treinamento do modelo usando.
+        """Treinamento do modelo.
         
         Parameters
         ----------
         X : ndarray de formato (n_samples, n_features)
             Em que n_samples é o número de amostras e n_features é o
-            número de SNPS. Contém o número de allele2 de cada SNP
-            observado nas amostras.
+            número de SNPS. Contém o número do alelo2 de cada SNP
+            observado nas amostras usadas no treinamento.
             
         y : ndarray de formato (n_samples,)
-            Nome das populações(target) de cada amostra do chunk. Deve
+            Nome das populações(classes) de cada amostra do chunk. Deve
             ser fornecido na mesma ordem que as amostras aparecem no X.
             
         rsid : ndarray de formato (n_features,), opcional
@@ -373,7 +370,7 @@ class MLEMix(ClassifierMixin, BaseEstimator):
             fornecido na mesma ordem que os SNPs estão no X.
 
         allele2 : ndarray de formato (n_features,), opcional
-            Alelos de todos os SNPs usados no treinamento. Deve ser
+            Alelos2 de todos os SNPs usados no treinamento. Deve ser
             fornecido na mesma ordem que os SNPs estão no X.
             
         Returns
@@ -449,10 +446,10 @@ class MLEMix(ClassifierMixin, BaseEstimator):
         Notes
         -----
         self.feature_freq_.T é um array no formato (n_features,
-        n_classes) com a frequência do allele2 de cada SNP para
+        n_classes) com a frequência do alelo2 de cada SNP para
         cada uma das populações.
         
-        like2 é o log likelihood da observação do allele2 dado as
+        like2 é o log likelihood da observação do alelo2 dado as
         frequência alélica de cada população e supostas proporções de
         ancestralidade.
         
@@ -553,7 +550,9 @@ class MLEMix(ClassifierMixin, BaseEstimator):
         Parameters
         ----------
         X : ndarray de formato (n_samples, n_features)
-            Amostras que se deseja saber a ancestralidade.
+            Em que n_samples é o número de amostras e n_features é o
+            número de SNPS. Contém o número de alelo2 de cada SNP
+            observado nas amostras que se deseja saber a ancestralidade.
         
         Returns
         -------
@@ -581,8 +580,10 @@ class MLEMix(ClassifierMixin, BaseEstimator):
         Parameters
         ----------
         X : ndarray de formato (n_samples, n_features)
-            Amostras que se deseja saber a população de origem mais
-            provável.
+            Em que n_samples é o número de amostras e n_features é o
+            número de SNPS. Contém o número de alelo2 de cada SNP
+            observado nas amostras que se deseja saber a população
+            de origem mais provável.
             
         Returns
         -------
@@ -603,7 +604,7 @@ class MLEMix(ClassifierMixin, BaseEstimator):
             allele2=None,
             feature_count=None,
             chr_count=None):
-        """Hack para inserir valores de frequência sem fazer treino.
+        """Método para inserir valores de frequência sem fazer treino.
         
         Se a pessoa já tiver valores de frequência, ela pode
         carregá-los e fazer as predições sem necessidade de fit.
@@ -624,7 +625,7 @@ class MLEMix(ClassifierMixin, BaseEstimator):
             em relaçao ao freq.
             
         allele2 : ndarray de formato (n_features,)
-            Alelo 2 de todos os SNPs. Deve estar na ordem correta
+            Alelo2 de todos os SNPs. Deve estar na ordem correta
             em relaçao ao freq.
 
         feature_count : ndarray (n_classes, n_features) default=None
@@ -678,7 +679,7 @@ class MLEMix(ClassifierMixin, BaseEstimator):
 
 
 class RegMLEMix(MLEMix):
-    """Estimador de ancestralidade global com regulaização.
+    """Estimador de ancestralidade global com regularização.
     
     Extensão do MLEMix para Implementação do termo de regularização 
     conforme descrito em Alexander e Lange (2011).
@@ -730,7 +731,7 @@ class RegMLEMix(MLEMix):
         Parameters
         ----------
         X : ndarray de formato (n_features,)
-            Contém o número de alelle2 de cada SNP observado na
+            Contém o número do alele2 de cada SNP observado na
             amostra. 
             
         admixture_fraction : ndarray de formato (n_classes,)
@@ -750,10 +751,10 @@ class RegMLEMix(MLEMix):
         Notes
         -----
         self.feature_freq_.T é um array no formato (n_features,
-        n_classes) com a frequência do allele2 de cada SNP para
+        n_classes) com a frequência do alelo2 de cada SNP para
         cada uma das populações.
         
-        like2 é o log likelihood da observação do allele2 dado as
+        like2 é o log likelihood da observação do alelo2 dado as
         frequência alélica de cada população e supostas proporções de
         ancestralidade.
         
@@ -764,7 +765,6 @@ class RegMLEMix(MLEMix):
         
         like é a soma de like1 e like2. Retorna-se o valor negativo de
         like para poder minimizar a função.
-
 
         Termo de regularização conforme em:
         Alexander, D. H., & Lange, K. (2011). Enhancements to the
@@ -780,7 +780,7 @@ class RegMLEMix(MLEMix):
         return -reg_like
 
 
-class IncrementalMLEMIx(RegMLEMix):
+class IncrementalMLEMix(RegMLEMix):
     """Classe para usar o método partial_input do RegMLEMix.
     
     Parameters
@@ -816,7 +816,24 @@ class IncrementalMLEMIx(RegMLEMix):
         
         
     def fit(self, X, y):
-          
+        """Treinamento do modelo.
+        
+        Parameters
+        ----------
+        X : ndarray de formato (n_samples, n_features)
+            Em que n_samples é o número de amostras e n_features é o
+            número de SNPS. Contém o número de alelo2 de cada SNP
+            observado nas amostras usadas no treinamento.
+            
+        y : ndarray de formato (n_samples,)
+            Nome das populações(classes) de cada amostra do chunk. Deve
+            ser fornecido na mesma ordem que as amostras aparecem no X.
+        
+        Returns
+        -------
+        self : object
+            Retorna a instância.
+        """
         skf = StratifiedKFold(n_splits=self.n_split)
         for _, fit_index in skf.split(X, y):
             X_fit = X[fit_index, :]
