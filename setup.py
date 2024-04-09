@@ -23,7 +23,7 @@ setup(
     author_email="raphael.amemiya@usp.br",
 
     description="mlemix",
-    long_description=read("README.rst"),
+    long_description=read("README.md"),
 
     packages=find_packages(exclude=('tests',)),
 
